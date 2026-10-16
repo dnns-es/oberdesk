@@ -18,6 +18,12 @@ on:
         type: string
         default: oberdesk
 
+# Los trabajos del motor piden poder escribir en el repositorio (uno de ellos
+# adjunta el listado de componentes a la version). Hay que concederlo aqui aunque
+# ese trabajo no se ejecute: GitHub revisa los permisos antes de empezar.
+permissions:
+  contents: write
+
 jobs:
   compilar:
     uses: ./.github/workflows/flutter-build.yml
