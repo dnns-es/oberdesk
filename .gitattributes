@@ -1,1 +1,4 @@
 * text=auto
+
+# El script de la marca corre en Linux: tiene que ir con saltos de linea Unix
+marca/*.sh text eol=lf

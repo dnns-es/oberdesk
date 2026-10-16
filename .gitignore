@@ -58,3 +58,10 @@ libsciter.dylib
 flutter/web/
 # libdrmtap is cloned at build time by build.py (not a submodule)
 /third_party/libdrmtap/
+
+# Copias que deja el script de la marca al sustituir los iconos del motor
+res/*.orig
+
+# El icono de OberDesk si entra: de el salen todos los demas al compilar
+!marca/icono.png
+!marca/icono.svg

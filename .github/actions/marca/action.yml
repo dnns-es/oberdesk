@@ -1,0 +1,24 @@
+# Fecha: 2026-10-16
+# Ruta: .github/actions/marca/action.yml
+# Paso que se añade despues de descargar el codigo en cada compilacion: deja el
+# codigo con la marca OberDesk y con nuestro servidor dentro.
+# Esta aparte, en vez de repetido en cada trabajo, para que al traer una version
+# nueva del motor solo haya que mantener una linea por trabajo.
+name: Aplicar la marca OberDesk
+description: Cambia nombres, iconos y el servidor del motor antes de compilar
+
+runs:
+  using: composite
+  steps:
+    - name: Preparar Python para los iconos
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Instalar Pillow
+      shell: bash
+      run: python -m pip install --quiet --disable-pip-version-check pillow
+
+    - name: Aplicar la marca
+      shell: bash
+      run: bash marca/aplicar-marca.sh

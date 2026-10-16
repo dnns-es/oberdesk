@@ -1,0 +1,28 @@
+# Fecha: 2026-10-16
+# Ruta: .github/workflows/oberdesk.yml
+# Compila OberDesk para Windows y Android.
+#
+# Se lanza a mano desde la pestaña Actions del repositorio. Al terminar, los
+# programas quedan colgados de la propia ejecucion ("Artifacts"); desde el PC se
+# bajan y se publican en descargas.dnns.es con F:\Claude\projects\oberdesk\publicar.sh.
+#
+# Lo que convierte el motor en OberDesk es .github/actions/marca, que corre dentro
+# de cada compilacion justo despues de descargar el codigo.
+name: Compilar OberDesk
+
+on:
+  workflow_dispatch:
+    inputs:
+      etiqueta:
+        description: Nombre con el que se marcan los ficheros compilados
+        type: string
+        default: oberdesk
+
+jobs:
+  compilar:
+    uses: ./.github/workflows/flutter-build.yml
+    secrets: inherit
+    with:
+      upload-artifact: true
+      upload-tag: ${{ inputs.etiqueta }}
+      solo-oberdesk: true
