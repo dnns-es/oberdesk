@@ -54,6 +54,12 @@ cambiar "$CFG" 'pub const RENDEZVOUS_SERVERS: &[&str] = &["rs-ny.rustdesk.com"];
                 "pub const RENDEZVOUS_SERVERS: &[&str] = &[\"${SERVIDOR}\"];"
 cambiar "$CFG" 'pub const RS_PUB_KEY: &str = "OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGqrQCsWqmBw=";' \
                 "pub const RS_PUB_KEY: &str = \"${CLAVE}\";"
+# Ademas hay que decirle que nuestro servidor es "el suyo", no uno publico.
+# Si esto se queda vacio, el motor se cree que anda en los servidores abiertos
+# del proyecto: ensena el aviso de "configure su propio servidor" y activa
+# apanos pensados para ellos.
+cambiar "$CFG" 'pub static ref PROD_RENDEZVOUS_SERVER: RwLock<String> = RwLock::new("".to_owned());' \
+                "pub static ref PROD_RENDEZVOUS_SERVER: RwLock<String> = RwLock::new(\"${SERVIDOR}\".to_owned());"
 
 echo "== Nombre en Windows =="
 cambiar Cargo.toml 'description = "RustDesk Remote Desktop"' "description = \"${NOMBRE}\""
