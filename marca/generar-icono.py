@@ -96,4 +96,43 @@ g.line([e(256), e(342), e(256), e(384)], fill=blanco, width=grosor)
 g.polygon([(e(222), e(184)), (e(318), e(232)), (e(276), e(247)), (e(261), e(289))], fill=blanco)
 glifo.resize((1024, 1024), Image.LANCZOS).save('marca/glifo.png')
 
-print('marca/icono.png y marca/glifo.png generados con los colores del SVG')
+
+# El logotipo de la cabecera: el icono y el nombre al lado. Caben 300x60 como
+# mucho, que es el hueco que deja la pantalla principal. Se hacen dos, uno para
+# el tema claro y otro para el oscuro, porque cambia el color de la letra.
+# Esto se genera AQUI y no durante la compilacion a proposito: asi la letra sale
+# siempre de este ordenador y no de lo que haya instalado el servidor que
+# compila, que no es lo mismo en Windows que en Linux.
+from PIL import ImageFont
+
+NOMBRE = 'OberDesk'
+FUENTES = [r'C:\Windows\Fonts\segoeuib.ttf', r'C:\Windows\Fonts\arialbd.ttf',
+           '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf']
+
+
+def fuente(tam):
+    for f in FUENTES:
+        try:
+            return ImageFont.truetype(f, tam)
+        except OSError:
+            continue
+    raise SystemExit('No encuentro ninguna fuente para el logotipo')
+
+
+def logotipo(ruta, color_letra):
+    alto, marca = 120, 96                      # al doble, se reduce despues
+    img = Image.new('RGBA', (600, alto), (0, 0, 0, 0))
+    img.paste(icono.resize((marca, marca), Image.LANCZOS), (0, (alto - marca) // 2))
+    d = ImageDraw.Draw(img)
+    f = fuente(60)
+    caja = d.textbbox((0, 0), NOMBRE, font=f)
+    d.text((marca + 20, (alto - (caja[3] - caja[1])) // 2 - caja[1]),
+           NOMBRE, font=f, fill=color_letra)
+    ancho = marca + 20 + (caja[2] - caja[0]) + 4
+    img.crop((0, 0, ancho, alto)).resize((ancho // 2, alto // 2), Image.LANCZOS).save(ruta)
+
+
+logotipo('marca/logo_light.png', tonos[0] + (255,))      # letra verde oscuro
+logotipo('marca/logo_dark.png', (255, 255, 255, 255))    # letra blanca
+
+print('marca/icono.png, marca/glifo.png y los logotipos generados')

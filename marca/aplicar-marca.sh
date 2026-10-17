@@ -26,16 +26,18 @@ cambiar() {
         echo "PARO: no existe $fichero (el motor ha cambiado de sitio los ficheros)" >&2
         exit 1
     fi
-    if ! grep -qF -- "$viejo" "$fichero"; then
-        echo "PARO: en $fichero no aparece: $viejo" >&2
-        echo "      Lo habra cambiado una version nueva del motor. Revisar antes de compilar." >&2
-        exit 1
-    fi
+    # La comprobacion se hace dentro de Python, no con grep: grep trata un texto
+    # de varias lineas como varios textos sueltos y daria por bueno un cambio
+    # que en realidad no ha ocurrido.
     python - "$fichero" "$viejo" "$nuevo" <<'PY'
 import sys
 fichero, viejo, nuevo = sys.argv[1], sys.argv[2], sys.argv[3]
 with open(fichero, encoding='utf-8') as f:
     texto = f.read()
+if viejo not in texto:
+    sys.exit('PARO: en %s no aparece:\n%s\n'
+             '      Lo habra cambiado una version nueva del motor. '
+             'Revisar antes de compilar.' % (fichero, viejo))
 with open(fichero, 'w', encoding='utf-8', newline='') as f:
     f.write(texto.replace(viejo, nuevo))
 PY
@@ -153,6 +155,38 @@ cambiar src/auth_2fa.rs 'const ISSUER: &str = "RustDesk";' \
 cambiar src/platform/windows.rs 'let caption = "RustDesk Output"' \
                                 "let caption = \"${NOMBRE} Output\""
 
+echo "== La pantalla principal =="
+# El motor deja un "Powered by RustDesk" en cuanto ve que el programa se llama
+# de otra forma. Se quita entero del panel.
+cambiar "$INICIO" '      if (bind.isCustomClient())
+        Align(
+          alignment: Alignment.center,
+          child: loadPowered(context),
+        ),
+' ''
+# Panel izquierdo mas ancho, barra de color mas gruesa y el numero de ID mucho
+# mas grande: es lo que el cliente tiene que leernos por telefono.
+cambiar "$INICIO" 'width: isIncomingOnly ? 280.0 : 200.0,' \
+                  'width: isIncomingOnly ? 300.0 : 240.0,'
+cambiar "$INICIO" '            width: 2,
+            decoration: const BoxDecoration(color: MyTheme.accent),' \
+                  '            width: 5,
+            decoration: const BoxDecoration(
+                color: MyTheme.accent,
+                borderRadius: BorderRadius.all(Radius.circular(3))),'
+cambiar "$INICIO" '                        style: TextStyle(
+                          fontSize: 22,
+                        ),' \
+                  '                        style: TextStyle(
+                          fontSize: 30,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.5,
+                        ),'
+cambiar "$INICIO" '      margin: const EdgeInsets.only(left: 20, right: 11),
+      height: 57,' \
+                  '      margin: const EdgeInsets.only(left: 20, right: 11),
+      height: 72,'
+
 echo "== La pantalla de Acerca de =="
 AJUSTES=flutter/lib/desktop/pages/desktop_setting_page.dart
 cambiar "$AJUSTES" 'Copyright © ${DateTime.now().toString().substring(0, 4)} Purslane Tech Pte. Ltd.\n$license' \
@@ -248,6 +282,12 @@ icono.save('flutter/windows/runner/resources/app_icon.ico',
 
 # El logotipo que el programa enseña dentro de sus propias pantallas.
 shutil.copy2('marca/icono.svg', 'flutter/assets/icon.svg')
+
+# La cabecera del panel izquierdo: el motor la deja vacia y busca estos dos
+# ficheros, uno para el tema claro y otro para el oscuro. Se generan a mano con
+# marca/generar-icono.py (alli se explica por que no se hacen aqui).
+shutil.copy2('marca/logo_light.png', 'flutter/assets/logo_light.png')
+shutil.copy2('marca/logo_dark.png', 'flutter/assets/logo_dark.png')
 
 # Android. El lanzador usa un icono "adaptativo": el sistema pone el fondo por
 # su cuenta y encima coloca solo el dibujo, que tiene que caber en el circulo
