@@ -144,6 +144,15 @@ cambiar "$COMUN" '  // Checkbox
       borderRadius: BorderRadius.all(
         Radius.circular(8),'
 
+echo "== Rastros del motor que se le ven al usuario =="
+# El nombre que aparece en la aplicacion de codigos de un solo uso (Google
+# Authenticator y similares) cuando se activa la verificacion en dos pasos.
+cambiar src/auth_2fa.rs 'const ISSUER: &str = "RustDesk";' \
+                        "const ISSUER: &str = \"${NOMBRE}\";"
+# Titulo de la ventana de mensajes del servicio en Windows.
+cambiar src/platform/windows.rs 'let caption = "RustDesk Output"' \
+                                "let caption = \"${NOMBRE} Output\""
+
 echo "== La pantalla de Acerca de =="
 AJUSTES=flutter/lib/desktop/pages/desktop_setting_page.dart
 cambiar "$AJUSTES" 'Copyright © ${DateTime.now().toString().substring(0, 4)} Purslane Tech Pte. Ltd.\n$license' \
