@@ -92,6 +92,58 @@ cambiar flutter/android/app/build.gradle 'applicationId "com.carriez.flutter_hbb
 echo "== Nombre en Mac =="
 cambiar Cargo.toml 'identifier = "com.carriez.rustdesk"' 'identifier = "es.dnns.oberdesk"'
 
+echo "== Colores =="
+# El motor es azul de arriba abajo. Aqui se cambia por el morado del icono, que
+# es lo que hace que al abrirlo no parezca el programa de otra gente.
+COMUN=flutter/lib/common.dart
+INICIO=flutter/lib/desktop/pages/desktop_home_page.dart
+cambiar "$COMUN" '0xFF0071FF' "0xFF${COLOR_PRINCIPAL}"      # acento
+cambiar "$COMUN" '0x770071FF' "0x77${COLOR_PRINCIPAL}"      # acento a media tinta
+cambiar "$COMUN" '0xAA0071FF' "0xAA${COLOR_PRINCIPAL}"
+cambiar "$COMUN" '0xFF2C8CFF' "0xFF${COLOR_BOTON}"          # botones y avisos
+cambiar "$COMUN" '0xFF00B6F0' "0xFF${COLOR_OSCURO}"         # el numero de ID
+cambiar "$INICIO" '0xFF2F65BA' "0xFF${COLOR_OSCURO}"        # borde de la ventana
+
+# El color "primary" del tema se queda en el azul de serie de Flutter aunque se
+# cambie el acento: hay que decirselo en los dos temas, claro y oscuro.
+cambiar "$COMUN" 'primary: Colors.blue, secondary: accent, background: grayBg' \
+                 "primary: Color(0xFF${COLOR_PRINCIPAL}), secondary: accent, background: grayBg"
+cambiar "$COMUN" '      primary: Colors.blue,
+      secondary: accent,' \
+                 "      primary: Color(0xFF${COLOR_PRINCIPAL}),
+      secondary: accent,"
+
+# La franja de aviso de la pantalla principal es rosa chicle en el motor.
+cambiar "$INICIO" '                  Color.fromARGB(255, 226, 66, 188),
+                  Color.fromARGB(255, 244, 114, 124),' \
+                  "                  Color(0xFF${COLOR_OSCURO}),
+                  Color(0xFF${COLOR_BOTON}),"
+
+# Esquinas mas redondeadas que las del motor. Es un detalle pequeno, pero es de
+# lo primero que distingue una aplicacion de otra sin leer nada.
+cambiar "$COMUN" '  // ListTile
+  static const ListTileThemeData listTileTheme = ListTileThemeData(
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.all(
+        Radius.circular(5),' \
+                 '  // ListTile
+  static const ListTileThemeData listTileTheme = ListTileThemeData(
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.all(
+        Radius.circular(12),'
+cambiar "$COMUN" '  // Checkbox
+  static const CheckboxThemeData checkboxTheme = CheckboxThemeData(
+    splashRadius: 0,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.all(
+        Radius.circular(5),' \
+                 '  // Checkbox
+  static const CheckboxThemeData checkboxTheme = CheckboxThemeData(
+    splashRadius: 0,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.all(
+        Radius.circular(8),'
+
 echo "== Textos que ve el usuario =="
 # Los ficheros de idioma llevan el nombre del programa dentro de frases enteras.
 # Se cambia en todos los idiomas, no solo en español: el programa lo elige solo.
