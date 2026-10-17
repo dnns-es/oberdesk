@@ -69,6 +69,14 @@ echo "== Nuestra version =="
 cambiar Cargo.toml                'version = "1.5.0"' "version = \"${VERSION}\""
 cambiar libs/portable/Cargo.toml  'version = "1.5.0"' "version = \"${VERSION}\""
 cambiar flutter/pubspec.yaml      'version: 1.5.0+68'  "version: ${VERSION}+${VERSION_CODIGO}"
+# El Cargo.lock tambien guarda el numero, y se compila con --locked: si no
+# cuadra con el Cargo.toml, la compilacion se para antes de empezar.
+cambiar Cargo.lock 'name = "rustdesk"
+version = "1.5.0"' "name = \"rustdesk\"
+version = \"${VERSION}\""
+cambiar Cargo.lock 'name = "rustdesk-portable-packer"
+version = "1.5.0"' "name = \"rustdesk-portable-packer\"
+version = \"${VERSION}\""
 
 echo "== Nombre en Windows =="
 cambiar Cargo.toml 'description = "RustDesk Remote Desktop"' "description = \"${NOMBRE}\""
