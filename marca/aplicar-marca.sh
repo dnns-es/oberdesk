@@ -63,6 +63,13 @@ cambiar "$CFG" 'pub const RS_PUB_KEY: &str = "OeVuKk5nlHiXp+APNn0Y3pC1Iwpwn44JGq
 cambiar "$CFG" 'pub static ref PROD_RENDEZVOUS_SERVER: RwLock<String> = RwLock::new("".to_owned());' \
                 "pub static ref PROD_RENDEZVOUS_SERVER: RwLock<String> = RwLock::new(\"${SERVIDOR}\".to_owned());"
 
+echo "== Nuestra version =="
+# Sin esto el programa dice la version del motor, y dos OberDesk distintos
+# saldrian con el mismo numero: ni el cliente ni nosotros sabriamos cual tiene.
+cambiar Cargo.toml                'version = "1.5.0"' "version = \"${VERSION}\""
+cambiar libs/portable/Cargo.toml  'version = "1.5.0"' "version = \"${VERSION}\""
+cambiar flutter/pubspec.yaml      'version: 1.5.0+68'  "version: ${VERSION}+${VERSION_CODIGO}"
+
 echo "== Nombre en Windows =="
 cambiar Cargo.toml 'description = "RustDesk Remote Desktop"' "description = \"${NOMBRE}\""
 cambiar Cargo.toml 'ProductName = "RustDesk"'                "ProductName = \"${NOMBRE}\""
