@@ -144,19 +144,59 @@ cambiar "$COMUN" '  // Checkbox
       borderRadius: BorderRadius.all(
         Radius.circular(8),'
 
+echo "== La pantalla de Acerca de =="
+AJUSTES=flutter/lib/desktop/pages/desktop_setting_page.dart
+cambiar "$AJUSTES" 'Copyright © ${DateTime.now().toString().substring(0, 4)} Purslane Tech Pte. Ltd.\n$license' \
+                   "Copyright © \${DateTime.now().toString().substring(0, 4)} ${EMPRESA}\\n\$license"
+cambiar "$AJUSTES" "launchUrlString('https://rustdesk.com/privacy.html');" \
+                   "launchUrlString('${WEB}');"
+cambiar "$AJUSTES" "launchUrlString('https://rustdesk.com');" "launchUrlString('${WEB}');"
+cambiar "$AJUSTES" "translate('Slogan_tip')" "'${LEMA}'"
+# Este azul va en minusculas y se escapa del cambio de colores de mas arriba.
+cambiar "$AJUSTES" '0xFF2c8cff' "0xFF${COLOR_BOTON}"
+
 echo "== Textos que ve el usuario =="
-# Los ficheros de idioma llevan el nombre del programa dentro de frases enteras.
-# Se cambia en todos los idiomas, no solo en español: el programa lo elige solo.
+# Los ficheros de idioma son listas de ("clave", "traduccion"). Solo se cambia
+# la traduccion: la clave es con lo que el programa busca, y si se le cambia no
+# encuentra nada y acaba enseñando la clave en crudo, que es inglés con el
+# nombre de otros ("About RustDesk").
 for f in src/lang/*.rs; do
     python - "$f" "$NOMBRE" <<'PY'
-import sys
+import re, sys
 fichero, nombre = sys.argv[1], sys.argv[2]
 with open(fichero, encoding='utf-8') as f:
     texto = f.read()
+
+def una(m):
+    return '("%s", "%s")' % (m.group(1), m.group(2).replace('RustDesk', nombre))
+
+# Cada entrada es ("clave", "traduccion"), con comillas escapadas dentro.
+texto = re.sub(r'\("((?:[^"\\]|\\.)*)", "((?:[^"\\]|\\.)*)"\)', una, texto)
 with open(fichero, 'w', encoding='utf-8', newline='') as f:
-    f.write(texto.replace('RustDesk', nombre))
+    f.write(texto)
 PY
 done
+
+# Las claves que YA son una frase en ingles con el nombre dentro ("About
+# RustDesk", "Show RustDesk"...) no tienen traduccion al ingles: el programa
+# enseña la clave tal cual. Se le añade a en.rs la version con nuestro nombre.
+python - "$NOMBRE" <<'PY'
+import re, sys
+nombre = sys.argv[1]
+with open('src/lang/template.rs', encoding='utf-8') as f:
+    claves = re.findall(r'\("((?:[^"\\]|\\.)*RustDesk(?:[^"\\]|\\.)*)",', f.read())
+with open('src/lang/en.rs', encoding='utf-8') as f:
+    en = f.read()
+nuevas = [c for c in claves if '("%s",' % c not in en]
+if not nuevas:
+    raise SystemExit('PARO: en.rs ya trae esas claves; revisar antes de compilar')
+linea = max(en.rfind('),\n'), en.rfind(')\n'))
+corte = en.index('\n', linea) + 1
+anadido = ''.join('        ("%s", "%s"),\n' % (c, c.replace('RustDesk', nombre)) for c in nuevas)
+with open('src/lang/en.rs', 'w', encoding='utf-8', newline='') as f:
+    f.write(en[:corte] + anadido + en[corte:])
+print('   en.rs: %d frases en ingles que llevaban el nombre de otros' % len(nuevas))
+PY
 echo "   idiomas: $(ls src/lang/*.rs | wc -l) ficheros"
 
 echo "== Iconos =="
@@ -165,7 +205,7 @@ echo "== Iconos =="
 # otro de Windows que se llama igual y hace algo muy distinto.
 # El icono original del motor se guarda con .orig por si hace falta comparar.
 python - "$NOMBRE" <<'PY'
-from PIL import Image
+from PIL import Image, ImageDraw
 import os, shutil, sys
 
 originales = ['res/icon.png', 'res/icon.ico', 'res/tray-icon.ico', 'res/32x32.png',
@@ -190,8 +230,50 @@ guardar('res/128x128.png', 128)
 guardar('res/128x128@2x.png', 256)
 if os.path.exists('res/mac-icon.png.orig'):
     guardar('res/mac-icon.png', 1024)
+
+# Flutter se guarda SU PROPIO icono aparte: este es el de la ventana y el de la
+# barra de tareas. Si no se cambia, el programa se llama OberDesk pero en la
+# barra sale el circulo azul del motor.
+icono.save('flutter/windows/runner/resources/app_icon.ico',
+           sizes=[(s, s) for s in (16, 24, 32, 48, 64, 128, 256)])
+
+# El logotipo que el programa enseña dentro de sus propias pantallas.
+shutil.copy2('marca/icono.svg', 'flutter/assets/icon.svg')
+
+# Android. El lanzador usa un icono "adaptativo": el sistema pone el fondo por
+# su cuenta y encima coloca solo el dibujo, que tiene que caber en el circulo
+# central (de ahi el 60 %). El de la barra de avisos va en blanco y negro.
+glifo = Image.open('marca/glifo.png').convert('RGBA')
+densidades = {'mdpi': 48, 'hdpi': 72, 'xhdpi': 96, 'xxhdpi': 144, 'xxxhdpi': 192}
+for densidad, lado in densidades.items():
+    base = 'flutter/android/app/src/main/res/mipmap-' + densidad
+    icono.resize((lado, lado), Image.LANCZOS).save(base + '/ic_launcher.png')
+    redondo = icono.resize((lado, lado), Image.LANCZOS)
+    mascara = Image.new('L', (lado, lado), 0)
+    ImageDraw.Draw(mascara).ellipse([0, 0, lado - 1, lado - 1], fill=255)
+    redondo.putalpha(mascara)
+    redondo.save(base + '/ic_launcher_round.png')
+
+    frente_lado = round(lado * 2.25)          # el motor los guarda a ese tamaño
+    dentro = round(frente_lado * 0.60)
+    frente = Image.new('RGBA', (frente_lado, frente_lado), (0, 0, 0, 0))
+    hueco = (frente_lado - dentro) // 2
+    frente.paste(glifo.resize((dentro, dentro), Image.LANCZOS), (hueco, hueco))
+    frente.save(base + '/ic_launcher_foreground.png')
+
+    aviso = round(lado / 2)
+    glifo.resize((aviso, aviso), Image.LANCZOS).save(base + '/ic_stat_logo.png')
+
 print('   iconos generados a partir de marca/icono.png')
 PY
+
+# El fondo del icono de Android y el color de arranque de la app.
+cambiar flutter/android/app/src/main/res/values/ic_launcher_background.xml \
+        '<color name="ic_launcher_background">#ffffff</color>' \
+        "<color name=\"ic_launcher_background\">#${COLOR_PRINCIPAL}</color>"
+cambiar flutter/android/app/src/main/res/values/colors.xml \
+        '<color name="primary">#FF0071FF</color>' \
+        "<color name=\"primary\">#FF${COLOR_PRINCIPAL}</color>"
 
 echo
 echo "Marca aplicada: ${NOMBRE} · servidor ${SERVIDOR} · $cambiados textos cambiados"

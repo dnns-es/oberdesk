@@ -83,4 +83,17 @@ d.line([e(256), e(342), e(256), e(384)], fill=blanco, width=grosor)
 d.polygon([(e(222), e(184)), (e(318), e(232)), (e(276), e(247)), (e(261), e(289))], fill=blanco)
 
 icono.resize((1024, 1024), Image.LANCZOS).save('marca/icono.png')
-print('marca/icono.png generado con los colores del SVG')
+
+# El mismo dibujo pero solo el trazo blanco, sin fondo. Hace falta para el icono
+# de Android (que pone el fondo por su cuenta) y para el aviso de la barra de
+# estado, que Android pinta de un solo color.
+glifo = Image.new('RGBA', (LADO, LADO), (0, 0, 0, 0))
+g = ImageDraw.Draw(glifo)
+g.rounded_rectangle([e(96), e(128), e(96 + 320), e(128 + 214)],
+                    radius=e(30), outline=blanco, width=grosor)
+g.line([e(208), e(384), e(304), e(384)], fill=blanco, width=grosor, joint='curve')
+g.line([e(256), e(342), e(256), e(384)], fill=blanco, width=grosor)
+g.polygon([(e(222), e(184)), (e(318), e(232)), (e(276), e(247)), (e(261), e(289))], fill=blanco)
+glifo.resize((1024, 1024), Image.LANCZOS).save('marca/glifo.png')
+
+print('marca/icono.png y marca/glifo.png generados con los colores del SVG')
